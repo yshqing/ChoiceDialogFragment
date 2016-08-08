@@ -1,0 +1,97 @@
+apply plugin: 'com.android.library'
+apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'com.jfrog.bintray'
+
+// 这个version是library的版本，更新后也需要更改这个值
+version = "1.0.0"
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "23.0.3"
+
+    defaultConfig {
+        minSdkVersion 15
+        targetSdkVersion 23
+        versionCode 1
+        versionName version
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    testCompile 'junit:junit:4.12'
+}
+
+def siteUrl = 'https://github.com/yshqing/ChoiceDialogFragment'// 项目的主页
+def gitUrl = 'https://github.com/yshqing/ChoiceDialogFragment.git'// Git仓库的url
+group = "com.ysq.android.utils" // Maven Group ID for the artifact，
+install {
+    repositories.mavenInstaller {
+        pom {
+            project {
+                packaging 'aar'
+                name 'Log tool for android, Can setting log level and save to assign file'//项目的描述 你可以多写一点
+                url siteUrl//
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id 'xuehuayouling' //
+                        name 'Shengqing Yang'//
+                        email 'xuehuayouling@163.com'//
+                    }
+                }
+                scm {
+                    connection siteUrl//
+                    developerConnection gitUrl//
+                    url siteUrl//
+                }
+            }
+        }
+    }
+}
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+task javadoc(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(configurations.compile.files, android.getBootClasspath().join(File.pathSeparator))
+    options.encoding = "UTF-8"
+}
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+artifacts {
+    archives javadocJar
+    archives sourcesJar
+}
+Properties properties = new Properties()
+//读取properties的配置信息，当然直接把信息写到代码里也是可以的
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
+bintray {
+    user = properties.getProperty("bintray.user")
+    key = properties.getProperty("bintray.apikey")
+    configurations = ['archives']
+    pkg {
+        //这个应该是传到maven的仓库的
+        repo = "maven"
+        name = "choicedialogfragment"//发布的项目名字小写
+        websiteUrl = siteUrl//
+        vcsUrl = gitUrl//
+        licenses = ["Apache-2.0"]
+        publish = true
+    }
+}
